@@ -3,6 +3,8 @@
 
 #include "util.h"
 #include "socket.h"
+#include "sk_buff.h"
+#include "net_device.h"
 
 #define	UDP_HTABLE_SIZE	128
 
