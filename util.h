@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <linux/elf.h>
 #include <linux/types.h>
+#include <arpa/inet.h>
 #include <assert.h>
 
 #define	ALIGN	8

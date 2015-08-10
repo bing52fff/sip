@@ -1,5 +1,6 @@
-#include "util.h"
 #include "sk_buff.h"
+#include "eth.h"
+#include "ip.h"
 
 struct sk_buff* skb_alloc(__u32 size)
 {

@@ -2,8 +2,8 @@
 #define __SKBUFF_H
 
 #include "util.h"
-#include "ip.h"
-#include "eth.h"
+
+#define	CHECKSUM_NONE	0
 
 struct sk_buff
 {

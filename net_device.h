@@ -36,5 +36,8 @@ struct net_device
 };
 
 void sip_init_ethnet(struct net_device *dev);
+__u8 input(struct sk_buff *pskb, struct net_device *dev);
+__u8 lowoutput(struct sk_buff *skb, struct net_device *dev);
+__u8 output(struct sk_buff *skb, struct net_device *dev);
 
 #endif	//net_device.h

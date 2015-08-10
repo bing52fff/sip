@@ -1,4 +1,6 @@
 #include "ip.h"
+#include "icmp.h"
+#include "udp.h"
 
 int ip_input(struct sk_buff *skb, struct net_device *dev)
 {
@@ -111,4 +113,61 @@ int ip_output(struct sk_buff *skb, struct net_device *dev, struct in_addr *src, 
 		skb = ip_frag(skb, dev);
 	dev->output(skb, dev);
 	return 0;
+}
+struct sk_buff* ip_frag(struct sk_buff *skb, struct net_device *dev)
+{
+	__u8 frag_num = 0;
+	__u16 tot_len = ntohs(skb->nh.iph->tot_len);
+	__u8 mtu = dev->mtu;
+	__u8 half_mtu = (mtu+1)/2;
+	frag_num = (tot_len - IPHDR_LEN + half_mtu) / (mtu - IPHDR_LEN -ETH_HLEN);
+	__u16 i = 0;
+	struct sk_buff *skb_h = NULL, *skb_t = NULL, *skb_c = NULL;
+	for (i = 0, skb->tail = skb->head; i < frag_num; i ++)
+	{
+		if (i == 0)
+		{
+			skb_t = skb_alloc(mtu);
+			skb_t->pyh.raw = skb_put(skb_t, ETH_HLEN);
+			skb_t->nh.raw = skb_put(skb_t, IPHDR_LEN);
+			memcpy(skb_t->head, skb->head, mtu);
+			skb_put(skb, mtu);
+			skb_t->nh.iph->frag_off = htons(0x2000);
+			skb_t->nh.iph->tot_len = htons(mtu - ETH_HLEN);
+			skb_t->nh.iph->check = 0;
+			skb_t->nh.iph->check = sip_chksum(skb_t->nh.raw, IPHDR_LEN);
+			skb_h = skb_c = skb_t;
+		}
+		else if (i == frag_num - 1)
+		{
+			skb_t = skb_alloc(mtu);
+			skb_t->pyh.raw = skb_put(skb_t, ETH_HLEN);
+			skb_t->nh.raw = skb_put(skb_t, IPHDR_LEN);
+			memcpy(skb_t->head, skb->head, ETH_HLEN + IPHDR_LEN);
+			memcpy(skb_t->head + ETH_HLEN + IPHDR_LEN, skb->tail, skb->end - skb->tail);
+			skb_t->nh.iph->frag_off = htons(i * (mtu - ETH_HLEN - IPHDR_LEN) + IPHDR_LEN);
+			skb_t->nh.iph->tot_len = htons(skb->end - skb->tail + IPHDR_LEN);
+			skb_t->nh.iph->check = 0;
+			skb_t->nh.iph->check = sip_chksum(skb_t->nh.raw, IPHDR_LEN);
+			skb_c->next = skb_t;
+		}
+		else
+		{
+			skb_t = skb_alloc(mtu);
+			skb_t->pyh.raw = skb_put(skb_t, ETH_HLEN);
+			skb_t->nh.raw = skb_put(skb_t, IPHDR_LEN);
+			memcpy(skb_t->head, skb->head, ETH_HLEN + IPHDR_LEN);
+			memcpy(skb_t->head + ETH_HLEN + IPHDR_LEN, skb->tail, mtu - ETH_HLEN - IPHDR_LEN);
+			skb_put(skb_t, mtu - ETH_HLEN - IPHDR_LEN);
+			skb_t->nh.iph->frag_off = htons((i * (mtu - ETH_HLEN - IPHDR_LEN) + IPHDR_LEN) | 0x2000);
+			skb_t->nh.iph->tot_len = htons(mtu - ETH_HLEN);
+			skb_t->nh.iph->check = 0;
+			skb_t->nh.iph->check = sip_chksum(skb_t->nh.raw, IPHDR_LEN);
+			skb_c->next = skb_t;
+			skb_c = skb_t;
+		}
+		skb_t->ip_summed = 1;
+	}
+	skb_free(skb);
+	return skb_h;
 }

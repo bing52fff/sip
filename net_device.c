@@ -2,7 +2,7 @@
 #include "ip.h"
 #include "arp.h"
 
-static __u8 input(struct sk_buff *pskb, struct net_device *dev)
+__u8 input(struct sk_buff *pskb, struct net_device *dev)
 {
 	char ef[ETH_FRAME_LEN];
 	int n, i;
@@ -48,7 +48,7 @@ static __u8 input(struct sk_buff *pskb, struct net_device *dev)
 out:
 	return retval;
 }
-static __u8 lowoutput(struct sk_buff *skb, struct net_device *dev)
+__u8 lowoutput(struct sk_buff *skb, struct net_device *dev)
 {
 	int n = 0;
 	int len = sizeof(struct sockaddr);
@@ -59,7 +59,7 @@ static __u8 lowoutput(struct sk_buff *skb, struct net_device *dev)
 	}
 	return 0;
 }
-static __u8 output(struct sk_buff *skb, struct net_device *dev)
+__u8 output(struct sk_buff *skb, struct net_device *dev)
 {
 	int retval = 0;
 	struct arpt_arp *arp = NULL;
@@ -87,13 +87,6 @@ static __u8 output(struct sk_buff *skb, struct net_device *dev)
 	}
 out:
 	return retval;
-}
-
-int main()
-{
-	struct net_device *dev = (struct net_device*) malloc(sizeof(struct net_device));
-	sip_init_ethnet(dev);
-	return 0;
 }
 
 void sip_init_ethnet(struct net_device *dev)
