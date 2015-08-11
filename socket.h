@@ -1,6 +1,7 @@
 #ifndef __SOCKET_H
 #define __SOCKET_H
 
+#include "util.h"
 struct sock
 {
 	int type;

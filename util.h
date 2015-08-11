@@ -9,6 +9,7 @@
 #include <linux/elf.h>
 #include <linux/types.h>
 #include <arpa/inet.h>
+#include <semaphore.h>
 #include <assert.h>
 
 #define	ALIGN	8

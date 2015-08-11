@@ -1,5 +1,13 @@
 #include "udp.h"
 
+static struct udp_pcb* udp_pcbs[UDP_HTABLE_SIZE];
+static __u16 found_a_port()
+{
+	static __u32 index = 1024;
+	index ++;
+	return (__u16)(index & 0xffff);
+}
+
 int udp_input(struct sk_buff *skb, struct net_device *dev)
 {
 	__u16 port = ntohs(skb->th.udph->dest);
@@ -34,7 +42,7 @@ int udp_output(struct sk_buff *skb, struct net_device *dev, struct udp_pcb *pcb,
 {
 	ip_output(skb, dev, src, dest, pcb->ttl, pcb->tos, IPPROTO_UDP);
 }
-struct udp_pcb udp_new()
+struct udp_pcb* udp_new()
 {
 	struct udp_pcb *pcb = NULL;
 	pcb = (struct udp_pcb*) malloc(sizeof(struct udp_pcb));
@@ -135,10 +143,10 @@ int udp_sendto(struct net_device *dev, struct udp_pcb *pcb, struct sk_buff *skb,
 		if (udphdr->check = 0x0000)
 			udphdr->check = 0xffff;
 	}
-	err = udp_output(skb, src_ip, dst_ip, pcb->ttl, pcb->tos, IPPROTO_UDP);
+	err = udp_output(skb, dev, pcb, src_ip, dst_ip);
 	return err;
 }
-__u16 udp_chksum(struct sk_buff *skb, struct in_adddr *src, struct in_addr *dest, __u8 proto, __u16 proto_len)
+__u16 udp_chksum(struct sk_buff *skb, struct in_addr *src, struct in_addr *dest, __u8 proto, __u16 proto_len)
 {
 	__u32 acc = 0;
 	__u8 swapped = 0;
